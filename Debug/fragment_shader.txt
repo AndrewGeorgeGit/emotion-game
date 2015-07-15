@@ -2,9 +2,9 @@
 
 in vec3 spriteColor;
 
-out vec4 color;
+uniform float opacity;
 
 void main ()
 {
-	color = vec4(spriteColor, 1.0f);
+	gl_FragColor = vec4(vec3(opacity, opacity, opacity) * spriteColor, 1.0f);
 }
