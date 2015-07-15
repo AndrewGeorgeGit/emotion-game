@@ -30,7 +30,7 @@ public:
 	//attempts to add a Sprite to the ActiveArea. It will not if there are a maximum number of Sprites already.
 	//Returns true if Sprite was added. False if the maximum has already been reached and no Sprite was added.
 	//12345comment: comment better, seeing about keeping alphabethical order.
-	bool addSprite();
+	bool addSprite(Type spriteType = Type::INVALID_TYPE);
 	void removeSprite(int index);
 
 
@@ -52,8 +52,16 @@ private:
 	Sprite *sprites[MAX_SPRITES];
 
 
+	//how many of each type there are
+	int distribution[5];
+
+
 	//the number of Sprites in the active area
 	int spriteCount;
+
+
+	//
+	Type determineNewSpriteType();
 
 
 	//

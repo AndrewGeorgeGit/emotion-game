@@ -18,14 +18,84 @@ ActiveArea::SIZE = MAX_X - MIN_X;
 
 
 
-bool ActiveArea::addSprite()
+bool ActiveArea::addSprite(Type spriteType)
 {
 	if (spriteCount == MAX_SPRITES)
 		return false;
 
-	sprites[spriteCount++] = new Sprite(Sprite::randomType(), -1);
+	if (spriteType == Type::INVALID_TYPE)
+		spriteType = determineNewSpriteType();
+
+
+	//save reference to new Sprite
+	sprites[spriteCount] = new Sprite(spriteType, -1);
+	
+
+	//record new Sprite's Type
+	distribution[sprites[spriteCount]->getType()]++;
+
+
+	//increment number of sprites
+	spriteCount++;
+
 
 	return true;
+}
+
+
+
+Type ActiveArea::determineNewSpriteType()
+{
+	if (spriteCount == 1) return Sprite::randomType();
+
+
+	double odds[5][2];
+
+	for (int i = 0; i < 5; i++)
+	{
+		odds[i][0] = i;
+		odds[i][1] = (double)distribution[i] / spriteCount * 100.0;
+
+		for (int j = i; j > 0; j--)
+		{
+			if (odds[j][1] < odds[j - 1][1])
+			{
+				double tempType = odds[j - 1][0],
+					tempOdds = odds[j - 1][1];
+
+				odds[j - 1][0] = odds[j][0];
+				odds[j - 1][1] = odds[j][1];
+
+				odds[j][0] = tempType;
+				odds[j][1] = tempOdds;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	for (int i = 0, j = 4; i < j; i++, j--)
+	{
+		double tempOdds = odds[i][1];
+		odds[i][1] = odds[j][1];
+		odds[j][1] = tempOdds;
+	}
+
+	int sum = 0;
+	for (int i = 1; i < 5; i++)
+	{
+		odds[i][1] += odds[i - 1][1];
+	}
+
+	int choice = rand() % (int)odds[4][1];
+
+	for (int i = 0;; i++)
+	{
+		if (choice < odds[i][1])
+			return (Type)(int)odds[i][0];
+	}
 }
 
 
@@ -89,9 +159,21 @@ void ActiveArea::removeSprite(int index)
 	sprites[spriteCount - 1] = deleting;
 
 
-	/* --- deleting sprite --- */
-	delete sprites[spriteCount - 1];
+	/* --- updating counters and deleting --- */
+	distribution[deleting->getType()]--;
 	spriteCount--;
+	delete deleting;
+	
+
+	/* --- adding a  sprite if none of its kind exist --- */
+	//1345comment: under the assumption there is room
+	for (int i = 0; i < 5; i++)
+		if (distribution[i] == 0)
+		{
+			addSprite((Type)i);
+		}
+			
+
 
 	/* ** pontentially generating new sprites --- */
 	int spawn = rand() % 3;
@@ -106,6 +188,11 @@ ActiveArea::ActiveArea() : spriteCount(1)	//initialized to 1 because we add the 
 {
 	spriteCount = 1;
 	sprites[0] = HeroSprite::getHeroSprite();
+
+
+	for (int i = 0; i < 5; i++)
+		distribution[i] = 0;
+
 
 	for (int i = 1; i < MAX_SPRITES; i++)
 		sprites[i] = nullptr;

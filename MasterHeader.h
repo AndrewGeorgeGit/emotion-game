@@ -64,6 +64,7 @@ enum Command : int
 
 enum Type : char
 {
+	INVALID_TYPE = -1,
 	JOY_TYPE = 0,
 	SADNESS_TYPE = 1,
 	ANGER_TYPE = 2,
