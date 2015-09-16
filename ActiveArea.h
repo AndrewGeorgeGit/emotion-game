@@ -1,4 +1,22 @@
-#include "MasterHeader.h"
+/*
+Created By:
+Andrew George
+Kings of Tyrants Development
+http://www.KingsOfTyrants.com
+Copyright 2015
+
+License:
+Commercial use of this code or any derivative work that may come of it is strictly prohibited.
+
+eMotion - ActiveArea.h:
+The ActiveArea is the area on screen where the Sprites move.
+This class serves as the Sprite container as a result.
+It also controls program execution that occurs in the game loop.
+
+Comments:
+delete Collider.h/.cpp files in project directory
+Is the size variable still needed?
+*/
 
 
 
@@ -7,65 +25,81 @@
 
 
 
-//Responsible for 
-//Class responsible for containing sprites
+//includes
+#include "common.h"
+
+
+
 class ActiveArea
 {
 public:
-	//1 for the user, 10 for the initial number spawned, 10 for an expected upperbound
-	//whenever a Sprite "dies", it has the option of generating 0, 1, or 2 more. Reasonable, this fact should keep the total number of Sprites around 10.
-	//But just in case if all decide to spontaneously spawn 2, an upperbound of 10 + 10 is assumed.
-	//12345comment: make movement more smooth by linking it to time?
-	static const int MAX_SPRITES = 81;
+	//the initial number of sprites at the start 
+	static const int STARTING_AI_SPRITES = 40;
 
 
-	//the min/max coordinate values surrounding the Active Area
-	static const int MIN_X, MAX_X, MIN_Y, MAX_Y, SIZE;
+	//1 (for the hero) + 2 * STARTING_AI_SPRITES (to account for collected Sprites' ability to spawn two more)
+	static const int MAX_SPRITES = 1 + 2 * STARTING_AI_SPRITES;
+
+
+	//the size of the ActiveArea and where its starting/ending pixel values
+	static const int HEIGHT, WIDTH, MIN_X, MAX_X, MIN_Y, MAX_Y;
 
 
 	//returns singleton
-	static ActiveArea* getActiveArea();
+	static ActiveArea* get();
 
 
-	//attempts to add a Sprite to the ActiveArea. It will not if there are a maximum number of Sprites already.
-	//Returns true if Sprite was added. False if the maximum has already been reached and no Sprite was added.
-	//12345comment: comment better, seeing about keeping alphabethical order.
-	bool addSprite(Type spriteType = Type::INVALID_TYPE);
-	void removeSprite(int index);
+	//deletes singleton
+	static void destroy();
 
 
-	//
-	void play();
+	//executes a single cycle of move, redraw, and collide commands
+	void update();
+
+
+	//adds Sprite unless MAX_SPRITES already exist, thereby returning false
+	bool add(SpriteType spriteType = SpriteType::RANDOM_TYPE);
 
 
 private:
-	//constructor that intializes the single active area intance by filling sprites with null pointers
+	//intializes sprites[] with STARTING_AI_SPRITES and nullptrs
 	ActiveArea();
 
 
-	//only one ActiveArea is necesary
-	static ActiveArea *singleton;	//12345comment: do you delete?
+	//frees memory allocated by contained sprites
+	~ActiveArea();
 
 
-	//array that holds pointers dynamically create Sprites up to a maximum
-	//the Sprites will remained order (see Sprite.h for more information)
+	//deletes sprites[index]
+	void remove(int index);
+
+
+	//the only allowable instance of the class
+	static ActiveArea *singleton;
+
+
+	//sprites contained within the ActiveArea/Sprite container
 	Sprite *sprites[MAX_SPRITES];
 
 
-	//how many of each type there are
+	//count of each SpriteType
 	int distribution[5];
 
 
-	//the number of Sprites in the active area
-	int spriteCount;
+	//total Sprites
+	int count;
 
 
-	//
-	Type determineNewSpriteType();
+	//uses SpriteType distribution to semi-randomly determine the next SpriteType to be added
+	SpriteType generateNextSpriteType();
 
 
-	//
+	//sorts sprites[] from bottom left to top right
 	void order();
+
+
+	//determines which Sprites are in contact with each other before passing of the collisions to Graphic::collide()
+	void collide();
 };
 
 

@@ -1,106 +1,153 @@
-#include "MasterHeader.h"
-#include "Sprite.h"
-#include "Shader.h"
-#include "Graphic.h"
-#include "Collider.h"
+//includes
 #include "ActiveArea.h"
+#include "Sprite.h"
 #include "HeroSprite.h"
+#include "ShelfArea.h"
+#include "Shader.h"
+//#include "Graphic.h"
+
+
+
+ActiveArea *ActiveArea::singleton = nullptr;
 
 
 
 //12345comment: assuming active area will always be square. Consider size being a measure of bottom left to top right
-ActiveArea *ActiveArea::singleton = nullptr;
-const int ActiveArea::MIN_X = 0,
-ActiveArea::MAX_X = WINDOW_WIDTH - Graphic::GRAPHIC_SIZE,
-ActiveArea::MIN_Y = SHELF_HEIGHT,
-ActiveArea::MAX_Y = WINDOW_HEIGHT - Graphic::GRAPHIC_SIZE,
-ActiveArea::SIZE = MAX_X - MIN_X;
+const int
+ActiveArea::HEIGHT = 800,
+ActiveArea::WIDTH = 800,
+ActiveArea::MIN_X = 0,
+ActiveArea::MAX_X = ActiveArea::MIN_X + (ActiveArea::WIDTH - Graphic::GRAPHIC_SIZE),
+ActiveArea::MIN_Y = ShelfArea::SHELF_HEIGHT, //starts where the ShelfArea ends
+ActiveArea::MAX_Y = ActiveArea::MIN_Y + (ActiveArea::HEIGHT - Graphic::GRAPHIC_SIZE);
 
 
 
-bool ActiveArea::addSprite(Type spriteType)
+bool ActiveArea::add(SpriteType spriteType)
 {
-	if (spriteCount == MAX_SPRITES)
+	if (count == MAX_SPRITES)
 		return false;
 
-	if (spriteType == Type::INVALID_TYPE)
-		spriteType = determineNewSpriteType();
+	if (spriteType == SpriteType::RANDOM_TYPE)
+		spriteType = generateNextSpriteType();
 
-
-	//save reference to new Sprite
-	sprites[spriteCount] = new Sprite(spriteType, -1);
-	
-
-	//record new Sprite's Type
-	distribution[sprites[spriteCount]->getType()]++;
-
-
-	//increment number of sprites
-	spriteCount++;
-
+	sprites[count++] = new Sprite(spriteType, -1);
+	distribution[spriteType]++;
 
 	return true;
 }
 
 
 
-Type ActiveArea::determineNewSpriteType()
+void ActiveArea::collide()
 {
-	if (spriteCount == 1) return Sprite::randomType();
+	//every Sprite is consider involved in a Collision even if it is only with itself
+	//meaning every Sprite holds a reference (the index value) to its related collision once it has been determined
+	std::vector<Collision> collisions;
+	int *associatedCollision = new int[count];
+	const int no_collision_group = -1;
+	for (int i = 0; i < count; i++) associatedCollision[i] = no_collision_group;
 
 
-	double odds[5][2];
 
-	for (int i = 0; i < 5; i++)
+	for (int current = 0; current < count; current++)
 	{
-		odds[i][0] = i;
-		odds[i][1] = (double)distribution[i] / spriteCount * 100.0;
-
-		for (int j = i; j > 0; j--)
+		if (associatedCollision[current] == no_collision_group)
 		{
-			if (odds[j][1] < odds[j - 1][1])
-			{
-				double tempType = odds[j - 1][0],
-					tempOdds = odds[j - 1][1];
+			associatedCollision[current] = collisions.size();
+			collisions.push_back(Collision());
+			collisions[associatedCollision[current]].push_back(sprites[current]);
+		}
 
-				odds[j - 1][0] = odds[j][0];
-				odds[j - 1][1] = odds[j][1];
 
-				odds[j][0] = tempType;
-				odds[j][1] = tempOdds;
-			}
-			else
+
+		for (int neighbor = current + 1, relation;
+			 (relation = sprites[current]->relationTo(*sprites[neighbor])) > SpriteRelation::FAR && neighbor < count;
+			 neighbor++)
+		{
+			if (relation == SpriteRelation::COLLIDING)
 			{
-				break;
+				associatedCollision[neighbor] = associatedCollision[current];
+				collisions[associatedCollision[neighbor]].push_back(sprites[neighbor]);
 			}
 		}
 	}
 
-	for (int i = 0, j = 4; i < j; i++, j--)
+
+
+	for (int i = 0, n = collisions.size(); i < n; i++)
+		Graphic::collide(collisions[i]);
+
+
+	
+	delete[] associatedCollision;
+}
+
+
+
+void ActiveArea::destroy()
+{
+	delete singleton;
+}
+
+
+
+/*
+(1) calculates a SpriteType's appearance rate in the current ActiveArea
+(2) swaps high-low pairs, this means the lowest appearing SpriteType has the highest odds 
+(3) randomly selects SpriteType based on these odds
+*/
+SpriteType ActiveArea::generateNextSpriteType()
+{
+	if (count == 1) return Sprite::randomType();
+
+
+	//[][0] holds Sprite type. [][1] holds odds.
+	double spriteTypeOdds[NUMBER_OF_NON_HERO_SPRITE_TYPES][2];
+
+
+	//calculating appearance rate of each SpriteType. Ordering them also.
+	for (int i = 0; i < 5; i++)
 	{
-		double tempOdds = odds[i][1];
-		odds[i][1] = odds[j][1];
-		odds[j][1] = tempOdds;
+		spriteTypeOdds[i][0] = i;
+		spriteTypeOdds[i][1] = (double)distribution[i] / count * 100.0;
+
+		for (int j = i; j > 0; j--)
+		{
+			if (spriteTypeOdds[j][1] < spriteTypeOdds[j - 1][1])
+				std::swap(spriteTypeOdds[i], spriteTypeOdds[j]);
+			else
+				break;
+		}
 	}
 
-	int sum = 0;
-	for (int i = 1; i < 5; i++)
+
+	//swapping high-low pairs
+	for (int i = 0, j = NUMBER_OF_NON_HERO_SPRITE_TYPES - 1; i < j; i++, j--)
 	{
-		odds[i][1] += odds[i - 1][1];
+		std::swap(spriteTypeOdds[i][1], spriteTypeOdds[j][1]);
 	}
 
-	int choice = rand() % (int)odds[4][1];
 
+
+	for (int i = 1; i < NUMBER_OF_NON_HERO_SPRITE_TYPES; i++)
+	{
+		spriteTypeOdds[i][1] += spriteTypeOdds[i - 1][1];
+	}
+
+
+	//choosing next SpriteType
+	int choice = rand() % (int)spriteTypeOdds[NUMBER_OF_NON_HERO_SPRITE_TYPES - 1][1];
 	for (int i = 0;; i++)
 	{
-		if (choice < odds[i][1])
-			return (Type)(int)odds[i][0];
+		if (choice < spriteTypeOdds[i][1])
+			return (SpriteType)(int)spriteTypeOdds[i][0];
 	}
 }
 
 
 
-ActiveArea* ActiveArea::getActiveArea()
+ActiveArea* ActiveArea::get()
 {
 	if (singleton == nullptr)
 		singleton = new ActiveArea;
@@ -112,88 +159,84 @@ ActiveArea* ActiveArea::getActiveArea()
 
 void ActiveArea::order()
 {
-	for (int i = 1; i < spriteCount; i++)
-	{
-		int j = i;
-		while ( j > 0 && *sprites[j] < *sprites[j - 1])
-		{
-			Sprite *temp = sprites[j];
-			sprites[j] = sprites[j - 1];
-			sprites[j - 1] = temp;
-			j--;
-		}
-	}
+	//insertion sort
+	for (int i = 1; i < count; i++)
+		for (int j = i; j > 0 && *sprites[j] < *sprites[j - 1]; j--)
+			std::swap(sprites[j], sprites[j - 1]);
 }
 
 
 
-void ActiveArea::play()
+void ActiveArea::update()
 {
 	/* --- drawing sprites --- */
 	Shader::useShaderProgram();
-	for (int i = 0; i < spriteCount; i++)
+	for (int i = 0; i < count; i++)
 		sprites[i]->move();
 
-	/* ---  --- */
+	/* --- resolving collisions --- */
 	order();
+	collide();
 
-	Collider(sprites, spriteCount);
-
-
-
-	/* --- --- */
-	for (int i = 0; i < spriteCount; i++)
+	/* --- removing collected sprites --- */
+	for (int i = 0; i < count; i++)
 		if (sprites[i]->hasCollidedWithHero())
-			removeSprite(i);
+			remove(i);
 }
 
 
 
-void ActiveArea::removeSprite(int index)
+void ActiveArea::remove(int index)
 {
 	/* --- swaping sprite to be deleted to the last active element --- */
-	Sprite *deleting = sprites[index],
-		*saving = sprites[spriteCount - 1];
+	std::swap(sprites[index], sprites[count - 1]);
 
-	sprites[index] = saving;
-	sprites[spriteCount - 1] = deleting;
+
+
+	Sprite *deleting = sprites[count - 1];
+	SpriteType spriteType = deleting->getType();
+
 
 
 	/* --- updating counters and deleting --- */
-	distribution[deleting->getType()]--;
-	spriteCount--;
+	distribution[spriteType]--;
+	count--;
 	delete deleting;
 	
 
-	/* --- adding a  sprite if none of its kind exist --- */
-	//1345comment: under the assumption there is room
-	for (int i = 0; i < 5; i++)
-		if (distribution[i] == 0)
-		{
-			addSprite((Type)i);
-		}
+
+	/* --- adding a sprite if none of its kind exist --- */
+	if (distribution[(int)spriteType] == 0) add(spriteType);
 			
 
 
-	/* ** pontentially generating new sprites --- */
+	/* --- pontentially generating new sprites --- */
 	int spawn = rand() % 3;
-	for (int i = 0; i < spawn; i++)
-		addSprite();
+	while (spawn-- > 0)
+		add();
 }
 
 
 
-//12345comment: not initialzing
-ActiveArea::ActiveArea() : spriteCount(1)	//initialized to 1 because we add the user immediately
+ActiveArea::ActiveArea()
 {
-	spriteCount = 1;
 	sprites[0] = HeroSprite::getHeroSprite();
-
+	count = 1;
 
 	for (int i = 0; i < 5; i++)
 		distribution[i] = 0;
 
+	for (; count < STARTING_AI_SPRITES + 1;)
+		add();
 
-	for (int i = 1; i < MAX_SPRITES; i++)
+	for (int i = count; i < MAX_SPRITES; i++)
 		sprites[i] = nullptr;
+}
+
+
+
+ActiveArea::~ActiveArea()
+{
+	for (int i = 0; i < count; i++)
+		delete sprites[i];
 }
