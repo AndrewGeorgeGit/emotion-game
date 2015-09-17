@@ -1,19 +1,19 @@
-#include "MasterHeader.h"
-#include "Sprite.h"
+//includes
 #include "Graphic.h"
-#include "Collider.h"
+#include "Sprite.h"
 #include "ActiveArea.h"
 #include "Shader.h"
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 
+
 const int Graphic::GRAPHIC_SIZE = 25,
+Graphic::RANDOM_SPEED = -1,
 Graphic::MIN_TIME = 4,
 Graphic::MAX_TIME = 8;
 
-const GLfloat Graphic::spriteColors[6][3] = {
+const GLfloat Graphic::spriteColors[NUMBER_OF_AI_SPRITE_TYPES + 1][3] = {
 		{ 1.0f, 1.0f, 0.0f },	//joy RGB
 		{ 0.0f, 0.0f, 1.0f },	//sadness RGB
 		{ 1.0f, 0.0f, 0.0f },	//anger RGB
@@ -23,16 +23,10 @@ const GLfloat Graphic::spriteColors[6][3] = {
 };
 
 
-void Graphic::currentWindowCoordinates(Coordinate &x, Coordinate &y) const
-{
-	x = xOriginal + transformMatrix[3][0];
-	y = yOriginal + transformMatrix[3][1];
-	toWc(x, y);
-}
 
-
-
-void Graphic::avoid(Collision collision)
+//finds the average position of all Sprites involved in the collsion
+//and generates new translation 
+void Graphic::collide(Collision collision)
 {
 	int spriteCount = collision.size();
 
@@ -56,7 +50,7 @@ void Graphic::avoid(Collision collision)
 
 
 
-	/* --- issuing new translation command based on where the object is relative to the averaged object --- */
+	/* --- issuing new translation command in the command that is the same as the Sprite's command from the averaged position --- */
 	for (int i = 0; i < spriteCount; i++)
 	{
 		Graphic *graphic = collision[i]->getGraphic();
@@ -68,60 +62,69 @@ void Graphic::avoid(Collision collision)
 		xDistance = xLeft - xAverage;
 		yDistance = yBottom - yAverage;
 
-		Command direction;
+		Command command;
 		if (xDistance == 0 && yDistance > 0)
-			direction = Command::MOVE_NORTH;
+			command = Command::MOVE_NORTH;
 		else if (xDistance > 0 && yDistance > 0)
-			direction = Command::MOVE_NORTHEAST;
+			command = Command::MOVE_NORTHEAST;
 		else if (xDistance > 0 && yDistance == 0)
-			direction = Command::MOVE_EAST;
+			command = Command::MOVE_EAST;
 		else if (xDistance > 0 && yDistance < 0)
-			direction = Command::MOVE_SOUTHEAST;
+			command = Command::MOVE_SOUTHEAST;
 		else if (xDistance == 0 && yDistance < 0)
-			direction = Command::MOVE_SOUTH;
+			command = Command::MOVE_SOUTH;
 		else if (xDistance < 0 && yDistance < 0)
-			direction = Command::MOVE_SOUTHWEST;
+			command = Command::MOVE_SOUTHWEST;
 		else if (xDistance < 0 && yDistance == 0)
-			direction = Command::MOVE_WEST;
+			command = Command::MOVE_WEST;
 		else if (xDistance < 0 && yDistance > 0)
-			direction = Command::MOVE_NORTHWEST;
+			command = Command::MOVE_NORTHWEST;
 		else  //complete overlap
 		{
 			switch (rand() % 8)
 			{
 			case 0:
-				direction = MOVE_NORTH;
+				command = MOVE_NORTH;
 				break;
 			case 1:
-				direction = MOVE_NORTHEAST;
+				command = MOVE_NORTHEAST;
 				break;
 			case 2:
-				direction = MOVE_EAST;
+				command = MOVE_EAST;
 				break;
 			case 3:
-				direction = MOVE_SOUTHEAST;
+				command = MOVE_SOUTHEAST;
 				break;
 			case 4:
-				direction = MOVE_SOUTH;
+				command = MOVE_SOUTH;
 				break;
 			case 5:
-				direction = MOVE_SOUTHWEST;
+				command = MOVE_SOUTHWEST;
 				break;
 			case 6:
-				direction = MOVE_WEST;
+				command = MOVE_WEST;
 				break;
 			case 7:
-				direction = MOVE_NORTHWEST;
+				command = MOVE_NORTHWEST;
 				break;
 			}
 		}
 
-		graphic->issueNewTranslationInstruction(direction);
+		graphic->issueNewTranslationCommand(command);
 	}
 }
 
 
 
+void Graphic::currentWindowCoordinates(Coordinate &x, Coordinate &y) const
+{
+	x = xOriginal + transformMatrix[3][0];
+	y = yOriginal + transformMatrix[3][1];
+	toWc(x, y);
+}
+
+
+//12345comment
 bool Graphic::draw()
 {
 	/* --- applying translationVector instruction if there is time remaining --- */
@@ -160,7 +163,6 @@ void Graphic::generateInitialVertices(GLfloat vertex_data[])
 	/* --- generating starting coordinates --- */
 	Coordinate xLeft, xRight, yTop, yBottom;
 
-	//12345comment: consider emerging from offscreen
 	bool stickyXAxis = rand() % 2,		//emerge from X or Y direction?
 		stickyPositive = rand() % 2;	//emerge from positive or negative direction?
 
@@ -203,9 +205,9 @@ void Graphic::generateInitialVertices(GLfloat vertex_data[])
 
 
 
-void Graphic::issueNewTranslationInstruction(Command direction)
+void Graphic::issueNewTranslationCommand(Command command)
 {
-	if (direction == STOP)
+	if (command == Command::STOP)
 	{
 		translationVector = glm::vec3(0.0f, 0.0f, 0.0f);
 		return;
@@ -223,7 +225,7 @@ void Graphic::issueNewTranslationInstruction(Command direction)
 
 
 	//12345comment: check again
-	switch (direction)
+	switch (command)
 	{
 	case Command::MOVE_NORTH:
 		xMin = xMax = xCurrent;
@@ -309,8 +311,8 @@ void Graphic::issueNewTranslationInstruction(Command direction)
 void Graphic::toNdc(Coordinate &x, Coordinate &y)
 {
 	//see: https://www.opengl.org/sdk/docs/man/html/glViewport.xhtml for derivation of formula
-	x = 2.0 * x / WINDOW_WIDTH - 1;
-	y = 2.0 * y / WINDOW_HEIGHT - 1;
+	x = 2.0 * x / emotion_game::WINDOW_WIDTH - 1;
+	y = 2.0 * y / emotion_game::WINDOW_HEIGHT - 1;
 
 	//rounding error check
 	if (x < -1) x = -1;
@@ -322,12 +324,11 @@ void Graphic::toNdc(Coordinate &x, Coordinate &y)
 
 
 
-//12345comment: should this account for roundign error? What about emerging Graphics?
 void Graphic::toWc(Coordinate &x, Coordinate &y)
 {
 	//see: https://www.opengl.org/sdk/docs/man/html/glViewport.xhtml for derivation of formula
-	x = (x + 1) * (WINDOW_WIDTH / 2.00);
-	y = (y + 1) * (WINDOW_HEIGHT / 2.00);
+	x = (x + 1) * (emotion_game::WINDOW_WIDTH / 2.00);
+	y = (y + 1) * (emotion_game::WINDOW_HEIGHT / 2.00);
 
 	//rounding error check
 	if (x < ActiveArea::MIN_X) x = ActiveArea::MIN_X;
@@ -339,26 +340,18 @@ void Graphic::toWc(Coordinate &x, Coordinate &y)
 
 
 
-Graphic::Graphic(Type spriteType, int speedSetting) :
+Graphic::Graphic(SpriteType spriteType, int speedSetting) :
 	translationTimeRemaining(0),
 	vao(0),
 	vbo(0),
 	ebo(0)
 {
 	/* --- setting speed --- */
-	speed = speedSetting == -1 ? (double)(rand() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 500000 / ActiveArea::SIZE : (double)speedSetting * 500000 / ActiveArea::SIZE;
+	speed = speedSetting == RANDOM_SPEED ? (double)(rand() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 500000 / ActiveArea::DIAGONAL : (double)speedSetting * 500000 / ActiveArea::DIAGONAL;
 
 
 
 	/* --- constant values whose data will be needed later --- */
-	//RGB values for corresponding Sprite Types.
-	const GLfloat joyRGB[] = { 128.0, 128.0, 0.0 },
-		sadnessRGB[] = { 0.0f, 0.0f, 1.0f },
-		angerRGB[] = { 1.0f, 0.0f, 0.0f },
-		disgustRGB[] = { 0.0f, 100.0f / 255.0f, 0.0f },
-		fearRGB[] = { 255.0f / 255.0f, 20.0f / 255.0f, 147.0f / 255.0f },
-		whiteRGB[] = { 1.0f, 1.0f, 1.0f };
-
 	//EBO data on the drawing order of vertices to draw a rectangle 
 	const GLint draw_order[] = {
 		0, 1, 2,
@@ -376,23 +369,23 @@ Graphic::Graphic(Type spriteType, int speedSetting) :
 	const GLfloat *spriteRGB;
 	switch (spriteType)
 	{
-	case Type::JOY_TYPE:
+	case SpriteType::JOY_TYPE:
 		spriteRGB = spriteColors[JOY_TYPE];
 		break;
-	case Type::SADNESS_TYPE:
-		spriteRGB = spriteColors[Type::SADNESS_TYPE];
+	case SpriteType::SADNESS_TYPE:
+		spriteRGB = spriteColors[SpriteType::SADNESS_TYPE];
 		break;
-	case Type::ANGER_TYPE:
-		spriteRGB = spriteColors[Type::ANGER_TYPE];
+	case SpriteType::ANGER_TYPE:
+		spriteRGB = spriteColors[SpriteType::ANGER_TYPE];
 		break;
-	case Type::DISGUST_TYPE:
-		spriteRGB = spriteColors[Type::DISGUST_TYPE];
+	case SpriteType::DISGUST_TYPE:
+		spriteRGB = spriteColors[SpriteType::DISGUST_TYPE];
 		break;
-	case Type::FEAR_TYPE:
-		spriteRGB = spriteColors[Type::FEAR_TYPE];
+	case SpriteType::FEAR_TYPE:
+		spriteRGB = spriteColors[SpriteType::FEAR_TYPE];
 		break;
-	case Type::HERO_TYPE:
-		spriteRGB = spriteColors[Type::HERO_TYPE];
+	case SpriteType::HERO_TYPE:
+		spriteRGB = spriteColors[SpriteType::HERO_TYPE];
 	}
 
 	for (int i = 2; i < 20; i += 5)
@@ -426,7 +419,6 @@ Graphic::Graphic(Type spriteType, int speedSetting) :
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
-	//12345comment: find a way to delete buffers when object is destroyed
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -436,7 +428,6 @@ Graphic::Graphic(Type spriteType, int speedSetting) :
 
 Graphic::~Graphic()
 {
-	//12345comment: still can't delete w/o causing a user problem
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ebo);
 	glDeleteVertexArrays(1, &vao);

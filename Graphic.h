@@ -1,5 +1,24 @@
-#include "MasterHeader.h"
-#include <glm/glm.hpp>
+/*
+Created By:
+Andrew George
+of Kings of Tyrants Development
+http://www.KingsOfTyrants.com
+Copyright 2015
+
+License:
+Commercial use of this code or any derivative work that may come of it is strictly prohibited.
+
+eMotion - Graphic.h:
+Handles overhead involving a Sprite's Graphic such as creating buffers, updating translation matrices, etc.
+
+Comments:
+Consider using time to control movement to make translation smoother.
+Solidfy Command, Instruction, Direction
+Have Sprites emerge smoothly rather than appear
+
+Changes:
+used time
+*/
 
 
 
@@ -8,49 +27,25 @@
 
 
 
-//a large majority of SpriteRenderer (if it even still exists beyond the time of this writing) has been refactored into this Graphic class.
-//The desire was to remove the apparent desynchronization between the Sprite and SpriteRenderer class.
-//The Sprite class has a focus on individual Sprites whilst the SpriteRenderer class has a focus on arrays of Graphics
-//Thus, this class is born to hopefully be added as a member of Sprite and keep direct access to a Sprite's Graphic instead of having to use SpriteRender's seemingly static interface.
-//12345comment: time to make translation more fluid?
+//includes
+#include "common.h"
+#include <glm/glm.hpp>
+
+
+
 class Graphic
 {
 public:
-	//empty, useless constructor
-	Graphic() {};
-
-
-	//responsible for deleting buffers
-	~Graphic();
-
-
-	//creates vao and saves spawn coordinates
-	Graphic(Type spriteType, int speedSetting = -1);
-
-
-	//the pixel size N of an NxN Graphic
+	//pixel size N of an NxN Graphic
 	static const int GRAPHIC_SIZE;
 
 
-	//
-	static const GLfloat spriteColors[6][3];
+	//RGB values of the Hero and SpriteType Graphics.
+	static const GLfloat spriteColors[NUMBER_OF_AI_SPRITE_TYPES + 1][3];
 
 
-	//finds the central point of colliding objects and issues new translation instruction to set them on an avoidance path
-	static void avoid(Collision collision);
-
-
-	//
-	void currentWindowCoordinates(Coordinate &x, Coordinate &y) const;
-
-
-	//applys translationVector's instruction to transformMatrix, ending the updated matrix to the vertex xhader and then calls glDrawElements()
-	//Returns true if drawing was successful. False if translationTimeRemaining is 0, indicating the Graphic is waiting for new instruction.
-	bool draw();
-
-
-	//generates new translation vector in the direction of the passed command and resets translationTimeRemaining
-	void issueNewTranslationInstruction(Command direction);
+	//issues new translation instructions to objects involved in a collision with each other
+	static void collide(Collision collision);
 
 
 	//convert between normal device coordinates (NDC) and window coordinates (WC)
@@ -58,12 +53,45 @@ public:
 	static void toWc(Coordinate &x, Coordinate &y);
 
 
+	//default constructor
+	Graphic() {};
+
+
+	//creates vao and saves spawn coordinates
+	Graphic(SpriteType spriteType, int speedSetting = RANDOM_SPEED);
+
+
+	//returns by reference the X and Y window coordinates of the graphic
+	void currentWindowCoordinates(Coordinate &x, Coordinate &y) const;
+
+
+	//applies translationVector's instruction to transformMatrix, sending the updated matrix to the vertex shader and then calls glDrawElements()
+	//Returns true if drawing was successful. False if translationTimeRemaining is 0, indicating the Graphic is waiting for new instruction.
+	bool draw();
+
+
+	//generates new translation vector in the direction of the passed command and resets translationTimeRemaining
+	void issueNewTranslationCommand(Command command);
+
+
 private:
 	//the extremes of how long or short a particular graphic can take the travel the full length of the active area
 	static const int MIN_TIME, MAX_TIME;
 
 
-	//names of VAO, EBO, VBO allocated for this Graphic. All are to be delete when the object is destroyed.
+	//default value passed to Graphic(spriteType, int) which indicates a speed should be randomly generated
+	static const int RANDOM_SPEED;
+
+
+	//called within the constructor to randomLY generate stating coordinates
+	static void generateInitialVertices(GLfloat vertex_data[]);
+
+
+	//frees memory allocated by VAO, EBO, VBO buffers
+	~Graphic();
+
+
+	//names of VAO, EBO, VBO allocated for this Graphic.
 	GLuint vao, ebo, vbo;
 
 
@@ -79,16 +107,14 @@ private:
 	glm::vec3 translationVector;
 
 
-	//the rate at which a a particular graphic can cover the full ActiveArea
+	//the rate at which a particular graphic can cover the full ActiveArea
 	double speed;
 
 
 	//how many cycles remaining until the Graphic has traveled the length of its previously generated displacement
 	int translationTimeRemaining;
-
-
-	//called within the constructor to randoming generate stating coordinates
-	static void generateInitialVertices(GLfloat vertex_data[]);
 };
+
+
 
 #endif
