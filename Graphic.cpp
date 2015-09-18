@@ -347,7 +347,7 @@ Graphic::Graphic(SpriteType spriteType, int speedSetting) :
 	ebo(0)
 {
 	/* --- setting speed --- */
-	speed = speedSetting == RANDOM_SPEED ? (double)(rand() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 500000 / ActiveArea::DIAGONAL : (double)speedSetting * 500000 / ActiveArea::DIAGONAL;
+	speed = speedSetting == RANDOM_SPEED ? (double)(rand() % (MAX_TIME - MIN_TIME + 1) + MIN_TIME) * 1000000 / ActiveArea::DIAGONAL : (double)speedSetting * 1000000 / ActiveArea::DIAGONAL;
 
 
 

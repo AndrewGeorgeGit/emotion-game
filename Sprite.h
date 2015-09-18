@@ -1,10 +1,27 @@
-#include "MasterHeader.h"
-#include "Graphic.h"
+/*
+Created By:
+Andrew George
+of Kings of Tyrants Development
+http://www.KingsOfTyrants.com
+Copyright 2015
+
+License:
+Commercial use of this code or any derivative work that may come of it is strictly prohibited.
+
+eMotion - Sprite.h:
+
+*/
 
 
 
 #ifndef SPRITE_HEADER
 #define SPRITE_HEADER
+
+
+
+//includes
+#include "common.h"
+#include "Graphic.h"
 
 
 
@@ -16,11 +33,11 @@ public:
 
 
 	//creates a sprite of the passed type
-	Sprite(Type spriteType, int speedSetting);
+	Sprite(SpriteType spriteType, int speedSetting);
 
 
 	//returns a random Type
-	static Type randomType();
+	static SpriteType randomType();
 
 
 	//Returns true if (1) this is left of other or (2) this is directly below other
@@ -29,7 +46,7 @@ public:
 
 	//"is inside"/"overlaps"/"collission" operator. Returns true if two Sprites overlap.
 	//12345comment: really uncomfortable about removing const
-	virtual SpriteRelation operator>> (Sprite& other);
+	virtual SpriteRelation relationTo(Sprite &other);
 
 
 	//
@@ -41,7 +58,7 @@ public:
 
 
 	//returns spriteType
-	Type getType();
+	SpriteType getType();
 
 
 	//returns collidedWithHero
@@ -59,7 +76,7 @@ public:
 
 protected:
 	//the sprite's type
-	Type spriteType;
+	SpriteType spriteType;
 
 
 	//the corresponding on-screen Graphic

@@ -1,18 +1,15 @@
-#include "MasterHeader.h"
-#include "Sprite.h"
+//includes
 #include "HeroSprite.h"
-#include "Graphic.h"
 #include "ShelfArea.h"
-
 
 
 HeroSprite *HeroSprite::hero = nullptr;
 
 
 
-void HeroSprite::collectSprite(Type spriteType)
+void HeroSprite::collectSprite(SpriteType spriteType)
 {
-	spriteCollection.enqeue(spriteType);
+	collection.collect(spriteType);
 }
 
 
@@ -33,16 +30,11 @@ void HeroSprite::move()
 
 
 
-//12345comment: this has not been coded to handle more Types. 
 bool HeroSprite::victoryConditionMet()
 {
-	int target = SpriteCollectionQueue::QUEUE_SIZE / 5;
-
-	for (int i = 0; i < 5; i++)
-	{
-		if (spriteCollection.typeDemand((Type)i) != 0)
+	for (int i = 0; i < NUMBER_OF_AI_SPRITE_TYPES; i++)
+		if (collection.demandFor((SpriteType)i) != 0)
 			return false;
-	}
 
 	return true;
 }
@@ -50,7 +42,7 @@ bool HeroSprite::victoryConditionMet()
 
 
 //12345comment: maybe not as fluid as it can be
-HeroSprite::HeroSprite() : Sprite(Type::HERO_TYPE, 2)
+HeroSprite::HeroSprite() : Sprite(SpriteType::HERO_TYPE, 2)
 {
-	ShelfArea::getShelfArea()->linkData(&spriteCollection);
+	ShelfArea::getShelfArea()->linkData(&collection);
 }

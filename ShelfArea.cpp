@@ -1,7 +1,8 @@
-#include "MasterHeader.h"
-#include "Graphic.h"
 #include "ShelfArea.h"
+#include "Graphic.h"
+#include "SpriteTypeCollectionQueue.h"
 #include "Shader.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 
@@ -16,7 +17,7 @@ void ShelfArea::draw()
 {
 	for (int i = 0; i < 5; i++)
 	{
-		int demand = data->typeDemand((Type)i);
+		int demand = data->demandFor((SpriteType)i);
 		if (demand < 0) drawMinus(i);
 		else if (demand > 0) drawPlus(i);
 
@@ -29,7 +30,7 @@ void ShelfArea::draw()
 
 		//setting opacity uniform
 		GLuint opacityUniformLocation = glGetUniformLocation(Shader::getShaderProgram(), Shader::OPACITY_UNIFORM);
-		GLfloat opacity = i == data->peek() ? 1.0f : 0.25f;
+		GLfloat opacity = i == data->front() ? 1.0f : 0.25f;
 		glUniform1f(opacityUniformLocation, opacity);
 
 
@@ -46,7 +47,7 @@ void ShelfArea::drawMinus(int indicator)
 {
 	//standardized values between all indicators
 	const int indicatorSize = 30,
-		distanceBetweenIndicators = WINDOW_WIDTH / 5;
+		distanceBetweenIndicators = emotion_game::WINDOW_WIDTH / 5;
 
 	Coordinate xStart = distanceBetweenIndicators * indicator + (distanceBetweenIndicators - 2 * indicatorSize - 5),
 		xFinish = xStart + indicatorSize,
@@ -62,7 +63,7 @@ void ShelfArea::drawMinus(int indicator)
 	};
 
 
-	GLuint vbo;	//12345comment: did you delete?
+	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
@@ -94,7 +95,7 @@ void ShelfArea::drawPlus(int indicator)
 	drawMinus(indicator);
 	//standardized values between all indicators
 	const int indicatorSize = 30,
-		distanceBetweenIndicators = WINDOW_WIDTH / 5;
+		distanceBetweenIndicators = emotion_game::WINDOW_WIDTH / 5;
 
 	Coordinate xStart = distanceBetweenIndicators * indicator + (distanceBetweenIndicators - 2 * indicatorSize - 5) + indicatorSize / 2,
 		xFinish = xStart,
@@ -110,7 +111,7 @@ void ShelfArea::drawPlus(int indicator)
 	};
 
 
-	GLuint vbo;	//12345comment: did you delete?
+	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
@@ -146,7 +147,7 @@ ShelfArea* ShelfArea::getShelfArea()
 
 
 
-void ShelfArea::linkData(SpriteCollectionQueue* d)
+void ShelfArea::linkData(SpriteTypeCollectionQueue* d)
 {
 	data = d;
 }
@@ -158,7 +159,7 @@ ShelfArea::ShelfArea()
 	//12345comment: draw functions use this, make it more easily accessible
 	//standardized values between all indicators
 	const int indicatorSize = 30,
-		distanceBetweenIndicators = WINDOW_WIDTH / 5;
+		distanceBetweenIndicators = emotion_game::WINDOW_WIDTH / 5;
 
 	const GLuint draw_order[] = {
 		0, 1, 2,

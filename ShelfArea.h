@@ -1,16 +1,19 @@
-#include "MasterHeader.h"
-#include "SpriteCollectionQueue.h"
-
-
-
 #ifndef SHELF_AREA_HEADER
 #define SHELF_AREA_HEADER
+
+
+
+//includes
+#include "common.h"
 
 
 
 class ShelfArea
 {
 public:
+	//
+	static const int SHELF_HEIGHT = 100;
+
 	//updates shelf
 	void draw();
 
@@ -20,7 +23,7 @@ public:
 
 
 	//sets data to passed pointer
-	void linkData(SpriteCollectionQueue* d);
+	void linkData(SpriteTypeCollectionQueue* d);
 
 
 private:
@@ -37,7 +40,7 @@ private:
 
 
 	//the data that determines 
-	SpriteCollectionQueue* data;
+	SpriteTypeCollectionQueue* data;
 
 
 	//

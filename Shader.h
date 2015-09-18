@@ -1,7 +1,17 @@
-#include "MasterHeader.h"
+/*
 
+Created By:
+Andrew George
+of Kings of Tyrants Development
+http://www.KingsOfTyrants.com
+Copyright 2015
 
+License:
+Commercial use of this code or any derivative work that may come of it is strictly prohibited.
 
+eMotion - Shader.h:
+
+*/
 #ifndef SHADERS_HEADER
 #define SHADERS_HEADER
 
@@ -9,11 +19,21 @@
 
 #define SHADER_ERROR_SOURCE "Error in Shaders.cpp/"
 #define SHADER_FILE_ERROR -1
+#define BUFFER_SIZE 512
+
+
+
+#include "common.h"
+
+
+
 class Shader
 {
 public:
 	//
 	static const char *POSITION_MATRIX_UNIFORM, *OPACITY_UNIFORM;
+
+
 	//returns shaderProgram
 	static GLuint getShaderProgram();
 
@@ -47,5 +67,7 @@ private:
 	//loads, creates, and complies vertex shader
 	void setupVertexShader();
 };
+
+
 
 #endif

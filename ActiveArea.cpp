@@ -21,6 +21,7 @@ ActiveArea::MAX_X = ActiveArea::MIN_X + (ActiveArea::WIDTH - Graphic::GRAPHIC_SI
 ActiveArea::MIN_Y = ShelfArea::SHELF_HEIGHT, //starts where the ShelfArea ends
 ActiveArea::MAX_Y = ActiveArea::MIN_Y + (ActiveArea::HEIGHT - Graphic::GRAPHIC_SIZE);
 
+const double ActiveArea::DIAGONAL = sqrt(pow(HEIGHT, 2) + pow(WIDTH, 2));
 
 
 bool ActiveArea::add(SpriteType spriteType)
@@ -62,7 +63,7 @@ void ActiveArea::collide()
 
 
 		for (int neighbor = current + 1, relation;
-			 (relation = sprites[current]->relationTo(*sprites[neighbor])) > SpriteRelation::FAR && neighbor < count;
+			 (neighbor < count) && ( (relation = sprites[current]->relationTo(*sprites[neighbor])) > SpriteRelation::FAR);
 			 neighbor++)
 		{
 			if (relation == SpriteRelation::COLLIDING)
@@ -103,19 +104,19 @@ SpriteType ActiveArea::generateNextSpriteType()
 
 
 	//[][0] holds Sprite type. [][1] holds odds.
-	double spriteTypeOdds[NUMBER_OF_NON_HERO_SPRITE_TYPES][2];
+	double spriteTypeOdds[NUMBER_OF_AI_SPRITE_TYPES][2];
 
 
 	//calculating appearance rate of each SpriteType. Ordering them also.
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < NUMBER_OF_AI_SPRITE_TYPES; i++)
 	{
 		spriteTypeOdds[i][0] = i;
-		spriteTypeOdds[i][1] = (double)distribution[i] / count * 100.0;
+		spriteTypeOdds[i][1] = (double)distribution[i] / (count - 1) * 100.0;
 
 		for (int j = i; j > 0; j--)
 		{
 			if (spriteTypeOdds[j][1] < spriteTypeOdds[j - 1][1])
-				std::swap(spriteTypeOdds[i], spriteTypeOdds[j]);
+				std::swap(spriteTypeOdds[j], spriteTypeOdds[j - 1]);
 			else
 				break;
 		}
@@ -123,21 +124,21 @@ SpriteType ActiveArea::generateNextSpriteType()
 
 
 	//swapping high-low pairs
-	for (int i = 0, j = NUMBER_OF_NON_HERO_SPRITE_TYPES - 1; i < j; i++, j--)
+	for (int i = 0, j = NUMBER_OF_AI_SPRITE_TYPES - 1; i < j; i++, j--)
 	{
 		std::swap(spriteTypeOdds[i][1], spriteTypeOdds[j][1]);
 	}
 
 
 
-	for (int i = 1; i < NUMBER_OF_NON_HERO_SPRITE_TYPES; i++)
+	for (int i = 1; i < NUMBER_OF_AI_SPRITE_TYPES; i++)
 	{
 		spriteTypeOdds[i][1] += spriteTypeOdds[i - 1][1];
 	}
 
 
 	//choosing next SpriteType
-	int choice = rand() % (int)spriteTypeOdds[NUMBER_OF_NON_HERO_SPRITE_TYPES - 1][1];
+	int choice = rand() % (int)spriteTypeOdds[NUMBER_OF_AI_SPRITE_TYPES - 1][1];
 	for (int i = 0;; i++)
 	{
 		if (choice < spriteTypeOdds[i][1])

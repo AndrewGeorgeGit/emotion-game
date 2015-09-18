@@ -1,7 +1,7 @@
-#include "MasterHeader.h"
+//includes
 #include "Shader.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 
 

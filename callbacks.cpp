@@ -1,9 +1,6 @@
-#include "MasterHeader.h"
-#include "Sprite.h"
+#include "common.h"
 #include "HeroSprite.h"
 #include <iostream>
-
-
 
 /*
 ---------- clear_error_flag(const char *message)

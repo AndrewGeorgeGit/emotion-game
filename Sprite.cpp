@@ -1,14 +1,12 @@
-#include "MasterHeader.h"
+//includes
 #include "Sprite.h"
 #include "HeroSprite.h"
-#include "Graphic.h"
-#include "ActiveArea.h"
 
 
 
 void Sprite::command(Command direction)
 {
-	graphic.issueNewTranslationInstruction(direction);
+	graphic.issueNewTranslationCommand(direction);
 }
 
 
@@ -20,7 +18,7 @@ Graphic* Sprite::getGraphic()
 
 
 
-Type Sprite::getType()
+SpriteType Sprite::getType()
 {
 	return spriteType;
 }
@@ -30,6 +28,59 @@ Type Sprite::getType()
 bool Sprite::hasCollidedWithHero()
 {
 	return collidedWithHero;
+}
+
+
+
+/*
+Returns the distance relationship of two Sprites.
+Returns COLLIDING if the Sprites share both an X and Y coordinate.
+Returns CLOSE if the Sprites only share a singular coordinate.
+Returns FAR if the Sprites do not share a coordinate.
+If the HeroSprite is COLLIDING with another, collects the non-Hero Sprite and sets its collission flag.
+*/
+SpriteRelation Sprite::relationTo(Sprite& other)
+{
+	///getting coordinates
+	Coordinate xThis, yThis, xOther, yOther;
+
+	this->graphic.currentWindowCoordinates(xThis, yThis);
+	other.graphic.currentWindowCoordinates(xOther, yOther);
+
+
+
+	//determining distance relationship
+	bool xWithinRange = abs(xThis - xOther) < Graphic::GRAPHIC_SIZE;
+	bool yWithinRange = abs(yThis - yOther) < Graphic::GRAPHIC_SIZE;
+
+	SpriteRelation relation;
+	if (xWithinRange && yWithinRange)
+		relation = SpriteRelation::COLLIDING;
+	else if (xWithinRange || yWithinRange)
+		relation = SpriteRelation::CLOSE;
+	else
+		relation = SpriteRelation::FAR;
+
+
+
+	//
+	if (relation == SpriteRelation::COLLIDING)
+	{
+		if (this->spriteType == HERO_TYPE)
+		{
+			other.setCollidedWithHero();
+			((HeroSprite*)this)->collectSprite(other.spriteType);
+		}
+
+		else if (other.spriteType == HERO_TYPE)
+		{
+			this->setCollidedWithHero();
+			Sprite *heroSprite = &other;
+			((HeroSprite*)heroSprite)->collectSprite(this->spriteType);
+		}
+	}
+
+	return relation;
 }
 
 
@@ -79,9 +130,9 @@ void Sprite::move()
 
 
 
-Type Sprite::randomType()
+SpriteType Sprite::randomType()
 {
-	return (Type)(rand() % 5);
+	return (SpriteType)(rand() % 5);
 }
 
 
@@ -104,49 +155,8 @@ bool Sprite::operator< (const Sprite& other)
 }
 
 
-
-SpriteRelation Sprite::operator>> (Sprite& other)
-{
-	Coordinate xThis, yThis, xOther, yOther;
-
-	this->graphic.currentWindowCoordinates(xThis, yThis);
-	other.graphic.currentWindowCoordinates(xOther, yOther);
-
-
-
-	bool xWithinRange = abs(xThis - xOther) < Graphic::GRAPHIC_SIZE;
-	bool yWithinRange = abs(yThis - yOther) < Graphic::GRAPHIC_SIZE;
-
-	SpriteRelation relation;
-	if (xWithinRange && yWithinRange)
-		relation = COLLISION;
-	else if (xWithinRange || yWithinRange)
-		relation = IN_RANGE;
-	else
-		relation = OUT_OF_RANGE;
-
-	if (relation == COLLISION)
-	{
-		if (this->spriteType == HERO_TYPE)
-		{
-			other.setCollidedWithHero();
-			((HeroSprite*)this)->collectSprite(other.spriteType);
-		}
-			
-		else if (other.spriteType == HERO_TYPE)
-		{
-			this->setCollidedWithHero();
-			Sprite *heroSprite = &other;
-			((HeroSprite*)heroSprite)->collectSprite(this->spriteType);
-		}
-	}
-
-	return relation;
-}
-
-
 //12345comment: find better way to initialize graphic from the HeroSprite constructor w/o having to have a default value
-Sprite::Sprite(Type spriteType, int speedSetting) : spriteType(spriteType), graphic(spriteType, speedSetting), collidedWithHero(false)
+Sprite::Sprite(SpriteType spriteType, int speedSetting) : spriteType(spriteType), graphic(spriteType, speedSetting), collidedWithHero(false)
 {
 
 }

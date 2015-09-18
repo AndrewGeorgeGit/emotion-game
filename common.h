@@ -80,4 +80,12 @@ enum SpriteType : char
 const int NUMBER_OF_AI_SPRITE_TYPES = 5;
 
 
+
+//callback functions
+void clear_error_flag(const char *message);
+void error_callback(int error, const char* description);
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+
+
+
 #endif

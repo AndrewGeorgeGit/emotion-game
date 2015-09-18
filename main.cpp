@@ -1,12 +1,10 @@
-#include "MasterHeader.h"
+#include "common.h"
 #include "HeroSprite.h"
-#include "ActiveArea.h"
 #include "ShelfArea.h"
+#include "ActiveArea.h"
+#include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
-
-
 
 int main(void)
 {
@@ -25,7 +23,7 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "eMotion", nullptr, nullptr);
+	GLFWwindow *window = glfwCreateWindow(emotion_game::WINDOW_WIDTH, emotion_game::WINDOW_HEIGHT, "eMotion", nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSetWindowShouldClose(window, GL_FALSE);
 
@@ -39,17 +37,11 @@ int main(void)
 	}
 
 	glewExperimental = GL_TRUE;
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, emotion_game::WINDOW_WIDTH, emotion_game::WINDOW_HEIGHT);
 
 
 
-	ActiveArea *activeArea = ActiveArea::getActiveArea();
-
-	//12345comment: consider not using define
-	for (int i = 0; i < STARTING_SPRITE_COUNT; i++)
-	{
-		activeArea->addSprite();
-	}
+	ActiveArea *activeArea = ActiveArea::get();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -63,7 +55,7 @@ int main(void)
 
 		if (!HeroSprite::getHeroSprite()->victoryConditionMet())
 		{
-			activeArea->play();
+			activeArea->update();
 
 			ShelfArea::getShelfArea()->draw();
 		}
@@ -75,7 +67,7 @@ int main(void)
 	}
 
 
-
+	ActiveArea::destroy();
 	glfwTerminate();
 	return 0;
 }

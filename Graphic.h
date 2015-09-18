@@ -61,6 +61,10 @@ public:
 	Graphic(SpriteType spriteType, int speedSetting = RANDOM_SPEED);
 
 
+	//frees memory allocated by VAO, EBO, VBO buffers
+	~Graphic();
+
+
 	//returns by reference the X and Y window coordinates of the graphic
 	void currentWindowCoordinates(Coordinate &x, Coordinate &y) const;
 
@@ -85,10 +89,6 @@ private:
 
 	//called within the constructor to randomLY generate stating coordinates
 	static void generateInitialVertices(GLfloat vertex_data[]);
-
-
-	//frees memory allocated by VAO, EBO, VBO buffers
-	~Graphic();
 
 
 	//names of VAO, EBO, VBO allocated for this Graphic.

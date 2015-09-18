@@ -1,6 +1,19 @@
-#include "MasterHeader.h"
-#include "Sprite.h"
-#include "SpriteCollectionQueue.h"
+/*
+Created By:
+Andrew George
+of Kings of Tyrants Development
+http://www.KingsOfTyrants.com
+Copyright 2015
+
+License:
+Commercial use of this code or any derivative work that may come of it is strictly prohibited.
+
+eMotion - HeroSprite.h:
+Class defintion of a unique instance of Sprite that is controlled by the User.
+
+Comments:
+get rid of the imaginary number
+*/
 
 
 
@@ -9,14 +22,21 @@
 
 
 
+//includes
+#include "common.h"
+#include "Sprite.h"
+#include "SpriteTypeCollectionQueue.h"
+
+
+
 class HeroSprite : public Sprite
 {
 public:
 	//updates the Hero's collection poll and the ShelfArea
-	void collectSprite(Type spriteType);
+	void collectSprite(SpriteType spriteType);
 
 
-	//returns the single instance of the HeroSprite
+	//returns hero
 	static HeroSprite* getHeroSprite();
 
 
@@ -39,8 +59,8 @@ private:
 
 
 	//the Sprite Types the Hero posseses
-	//when there is a balance amongall Types, victory condition is reached
-	SpriteCollectionQueue spriteCollection;
+	//when there is a balance among all Types, victory condition is reached
+	SpriteTypeCollectionQueue collection;
 };
 
 

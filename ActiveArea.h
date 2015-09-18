@@ -34,7 +34,7 @@ class ActiveArea
 {
 public:
 	//the initial number of sprites at the start 
-	static const int STARTING_AI_SPRITES = 40;
+	static const int STARTING_AI_SPRITES = 25;
 
 
 	//1 (for the hero) + 2 * STARTING_AI_SPRITES (to account for collected Sprites' ability to spawn two more)
@@ -43,6 +43,10 @@ public:
 
 	//the size of the ActiveArea and where its starting/ending pixel values
 	static const int HEIGHT, WIDTH, MIN_X, MAX_X, MIN_Y, MAX_Y;
+
+
+	//the length of the ActiveArea's diagonal
+	static const double DIAGONAL;
 
 
 	//returns singleton

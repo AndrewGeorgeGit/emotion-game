@@ -39,8 +39,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\KoT Development\Documents\Copy\Development\#include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\KoT Development\Documents\Copy\Development\#libraries;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\KoT Development\Documents\Copy\Development\programs\Motion\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\KoT Development\Documents\Copy\Development\programs\Motion\libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -71,22 +71,20 @@
   <ItemGroup>
     <ClCompile Include="ActiveArea.cpp" />
     <ClCompile Include="callbacks.cpp" />
-    <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Graphic.cpp" />
     <ClCompile Include="ShelfArea.cpp" />
-    <ClCompile Include="SpriteCollectionQueue.cpp" />
+    <ClCompile Include="SpriteTypeCollectionQueue.cpp" />
     <ClCompile Include="HeroSprite.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Sprite.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Collider.h" />
+    <ClInclude Include="common.h" />
     <ClInclude Include="Graphic.h" />
-    <ClInclude Include="MasterHeader.h" />
     <ClInclude Include="HeroSprite.h" />
     <ClInclude Include="ShelfArea.h" />
-    <ClInclude Include="SpriteCollectionQueue.h" />
+    <ClInclude Include="SpriteTypeCollectionQueue.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="ActiveArea.h" />
